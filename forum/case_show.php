@@ -85,12 +85,13 @@ if(defined('_Forum')) {
         } else {
             common::$gump->sanitize($_POST);
             $filters = ['suche' => 'trim|addslashes|sanitize_string'];
+            $filtered_suche = common::$gump->filter($_POST, $filters)['suche'];
             $qry = common::$sql['default']->select("SELECT s1.global,s1.topic,s1.subtopic,s1.t_text,s1.t_email,s1.hits,s1.t_reg,s1.t_date,s1.closed,s1.sticky,s1.id,s1.lp,s1.t_nick "
                     . "FROM `{prefix_forum_threads}` AS s1 "
                     . "WHERE s1.topic LIKE ? AND s1.kid = ? OR s1.subtopic LIKE ? AND s1.kid = ? OR s1.t_text LIKE ? AND s1.kid = ? "
                     . "ORDER BY ".$sortby." "
                     . "LIMIT ".(common::$page - 1)*settings::get('m_fthreads').",".settings::get('m_fthreads').";",
-                    [$search="%".common::$gump->filter($_POST, $filters)['suche']."%",$id,$search,$id,$search,$id]);
+                    [$search="%".$filtered_suche."%",$_SESSION['kid'],$search,$_SESSION['kid'],$search,$_SESSION['kid']]);
             
             $_SESSION['search_type'] = "text";
             $entrys = common::$sql['default']->rowCount();
@@ -156,7 +157,7 @@ if(defined('_Forum')) {
             $smarty->assign('new',common::check_new($get['lp']));
             $smarty->assign('id',$get['id']);
             $smarty->assign('frompic',$frompic);
-            $smarty->assign('hl',(!empty($_POST['suche']) ? '&amp;hl='.$_POST['suche'] : ''));
+            $smarty->assign('hl',(!empty($filtered_suche) ? '&amp;hl='.htmlspecialchars($filtered_suche, ENT_QUOTES, 'UTF-8') : ''));
             $smarty->assign('sticky',$get['sticky']);
             $smarty->assign('global',$get['global']);
             $smarty->assign('topic',$topic_title=chunk_split(stringParser::decode($get['topic']),32,"<br>"));
@@ -173,7 +174,7 @@ if(defined('_Forum')) {
         $smarty->caching = false;
         $smarty->assign('id',$_SESSION['kid']);
         $smarty->assign('kid',$kategorie['id']);
-        $smarty->assign('suchwort',isset($_POST['suche']) ? $_POST['suche'] : '');
+        $smarty->assign('suchwort',!empty($filtered_suche) ? htmlspecialchars($filtered_suche, ENT_QUOTES, 'UTF-8') : '');
         $search = $smarty->fetch('file:['.common::$tmpdir.']'.$dir.'/forum_skat_search.tpl');
         $smarty->clearAllAssign();
 

@@ -135,7 +135,7 @@ if(defined('_Forum')) {
 
                 $nick = common::autor($getp['reg'], '', $getp['nick'], stringParser::decode($getp['email']));
                 if(!empty($_GET['hl']) && $_SESSION['search_type'] == 'autor') {
-                    if(preg_match("#".$_GET['hl']."#i",$nick))
+                    if(preg_match("#" . preg_quote($_GET['hl'], '#') . "#i",$nick))
                         $ftxt['class'] = 'class="highlightSearchTarget"';
                 }
 
@@ -288,7 +288,7 @@ if(defined('_Forum')) {
 
             $nick = common::autor($get['t_reg'], '', $get['t_nick'], $get['t_email']);
             if(!empty($_GET['hl']) && $_SESSION['search_type'] == 'autor') {
-                if(preg_match("#".$_GET['hl']."#i",$nick))
+                if(preg_match("#" . preg_quote($_GET['hl'], '#') . "#i",$nick))
                     $ftxt['class'] = 'class="highlightSearchTarget"';
             }
 

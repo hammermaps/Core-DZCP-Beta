@@ -154,10 +154,14 @@ function hl(string $text,string $word) {
     if(!empty($_GET['hl']) && $_SESSION['search_type'] == 'text') {
         if($_SESSION['search_con'] == 'or') {
             $words = explode(" ",$word);
-            for($x=0;$x<count($words);$x++)
-                $ret['text'] = preg_replace("#".$words[$x]."#i",'<span class="fontRed" title="'.$words[$x].'">'.$words[$x].'</span>',$text);
-        } else
-            $ret['text'] = preg_replace("#".$word."#i",'<span class="fontRed" title="'.$word.'">'.$word.'</span>',$text);
+            for($x=0;$x<count($words);$x++) {
+                $safeWord = preg_quote($words[$x], '#');
+                $ret['text'] = preg_replace("#".$safeWord."#i",'<span class="fontRed" title="'.$words[$x].'">'.$words[$x].'</span>',$text);
+            }
+        } else {
+            $safeWord = preg_quote($word, '#');
+            $ret['text'] = preg_replace("#".$safeWord."#i",'<span class="fontRed" title="'.$word.'">'.$word.'</span>',$text);
+        }
 
         if(!preg_match("#<span class=\"fontRed\" title=\"(.*?)\">#", $ret['text']))
             $ret['class'] = 'class="commentsRight"';
