@@ -38,7 +38,15 @@ if(defined('_Forum')) {
                         'subtopic' => 'trim',
                         'sticky' => 'sanitize_numbers',
                         'global' => 'sanitize_numbers',
-                        'eintrag' => 'trim'
+                        'eintrag' => 'trim',
+                        'answer_3' => 'trim|sanitize_string',
+                        'answer_4' => 'trim|sanitize_string',
+                        'answer_5' => 'trim|sanitize_string',
+                        'answer_6' => 'trim|sanitize_string',
+                        'answer_7' => 'trim|sanitize_string',
+                        'answer_8' => 'trim|sanitize_string',
+                        'answer_9' => 'trim|sanitize_string',
+                        'answer_10' => 'trim|sanitize_string'
                     ]);
 
                     $validated_post_data = common::$gump->run($_POST);
@@ -70,7 +78,7 @@ if(defined('_Forum')) {
                                     . "ON s2.`sid` = s1.`id` "
                                     . "WHERE s2.`id` = ?;", [$_SESSION['kid']]);
 
-                                $validated_vote_data['closed'] = (array_key_exists($validated_vote_data,'closed') ? $validated_vote_data['closed'] : 0);
+                                $validated_vote_data['closed'] = (array_key_exists('closed', $validated_vote_data) ? $validated_vote_data['closed'] : 0);
                                 if (common::$sql['default']->rows("SELECT `id` FROM `{prefix_votes}` WHERE `id` = ?;", [$get['vote']])) {
                                     common::$sql['default']->update("UPDATE `{prefix_votes}` SET `titel`  = ?," .
                                         ($fgetvote['intern'] ? " `intern` = 1," : " `intern` = " . (int)($validated_vote_data['intern']) . ",") . " `closed` = ? WHERE `id` = ?;",
@@ -253,7 +261,15 @@ if(defined('_Forum')) {
                         'subtopic' => 'trim',
                         'sticky' => 'sanitize_numbers',
                         'global' => 'sanitize_numbers',
-                        'eintrag' => 'trim'
+                        'eintrag' => 'trim',
+                        'answer_3' => 'trim|sanitize_string',
+                        'answer_4' => 'trim|sanitize_string',
+                        'answer_5' => 'trim|sanitize_string',
+                        'answer_6' => 'trim|sanitize_string',
+                        'answer_7' => 'trim|sanitize_string',
+                        'answer_8' => 'trim|sanitize_string',
+                        'answer_9' => 'trim|sanitize_string',
+                        'answer_10' => 'trim|sanitize_string'
                     ]);
 
                     $validated_post_data = common::$gump->run($_POST);

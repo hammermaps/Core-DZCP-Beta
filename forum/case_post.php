@@ -36,7 +36,8 @@ if(defined('_Forum')) {
                             //filter
                             common::$gump->filter_rules(['eintrag' => 'trim',
                                 'nick' => 'trim|sanitize_string',
-                                'email' => 'trim|sanitize_email']);
+                                'email' => 'trim|sanitize_email',
+                                'hp' => 'trim|sanitize_string']);
                         } else {
                             //validation
                             common::$gump->validation_rules(['eintrag' => 'required|min_len,1']);
@@ -56,18 +57,19 @@ if(defined('_Forum')) {
 
                             if (!$get['reg']) {
                                 common::$sql['default']->update("UPDATE `{prefix_forum_posts}` SET `nick` = ?, `email`  = ?, `text` = ?, `hp` = ?, `edited` = ? WHERE `id` = ?;",
-                                    [stringParser::encode($_POST['nick']), stringParser::encode($_POST['email']), stringParser::encode($_POST['eintrag']),
-                                        stringParser::encode(common::links($_POST['hp'])), stringParser::encode($editedby), $get['id']]);
+                                    [stringParser::encode($validated_post_data['nick']), stringParser::encode($validated_post_data['email']),
+                                        stringParser::encode($validated_post_data['eintrag']),
+                                        stringParser::encode(common::links($validated_post_data['hp'] ?? '')), stringParser::encode($editedby), $get['id']]);
                             } else {
                                 common::$sql['default']->update("UPDATE `{prefix_forum_posts}` SET `text` = ?, `edited` = ? WHERE `id` = ?;",
-                                    [stringParser::encode($_POST['eintrag']), stringParser::encode($editedby), $get['id']]);
+                                    [stringParser::encode($validated_post_data['eintrag']), stringParser::encode($editedby), $get['id']]);
                             }
 
-                            send_forum_abo(false, $get['sid'], $_POST['eintrag'], true);
+                            send_forum_abo(false, $get['sid'], $validated_post_data['eintrag'], true);
 
-                            $entrys = common::cnt("{prefix_forum_posts}", " WHERE `sid` = ?", "id", [$getp['sid']]); //TODO: FIX $getp
+                            $entrys = common::cnt("{prefix_forum_posts}", " WHERE `sid` = ?", "id", [$get['sid']]);
                             $pagenr = !$entrys ? 1 : ceil($entrys / settings::get('m_fposts'));
-                            $index = common::info(_forum_editpost_successful, '?action=showthread&amp;id=' . $getp['sid'] . '&amp;page=' . $pagenr . '#p' . ($entrys + 1));
+                            $index = common::info(_forum_editpost_successful, '?action=showthread&amp;id=' . $get['sid'] . '&amp;page=' . $pagenr . '#p' . ($entrys + 1));
                         } else {
                             DebugConsole::insert_info('forum/case_post.php', common::$gump->get_readable_errors(true));
                             //Errors
@@ -309,7 +311,7 @@ if(defined('_Forum')) {
                                         $class = 'class="commentsRight"';
                                         if (!empty($_GET['hl']) && $_SESSION['search_type'] == 'autor') {
                                             /** @var TYPE_NAME $nick */
-                                            if (preg_match("#" . $_GET['hl'] . "#i", $nick))
+                                            if (preg_match("#" . preg_quote($_GET['hl'], '#') . "#i", $nick))
                                                 $class = 'class="highlightSearchTarget"';
                                         }
 
