@@ -20,7 +20,7 @@ if(defined('_News') && isset($_GET['id']) && !empty($_GET['id'])) {
     if (common::$sql['default']->fetch("SELECT `intern` FROM `{prefix_news}` WHERE `id` = ?;", [$news_id],'intern') && !common::permission("intnews")) {
         $index = common::error(_error_wrong_permissions, 1);
     } else {
-        $get_news = common::$sql['default']->fetch("SELECT * FROM `{prefix_news}` WHERE `id` = ?".(common::permission("news") ? ";" : " AND public = 1;"), [$news_id]);
+        $get_news = common::$sql['default']->fetch("SELECT n.*, k.`katimg` FROM `{prefix_news}` AS n LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id` WHERE n.`id` = ?".(common::permission("news") ? ";" : " AND n.`public` = 1;"), [$news_id]);
         if (!common::$sql['default']->rowCount()) {
             $index = common::error(_id_dont_exist, 1);
         } else {
@@ -289,7 +289,7 @@ if(defined('_News') && isset($_GET['id']) && !empty($_GET['id'])) {
             }
 
             $intern = $get_news['intern'] ? _votes_intern : "";
-            $newsimage = '../inc/images/uploads/newskat/'.common::$sql['default']->fetch("SELECT `katimg` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get_news['kat']],'katimg');
+            $newsimage = '../inc/images/uploads/newskat/'.$get_news['katimg'];
             foreach (common::SUPPORTED_PICTURE as $tmpendung) {
                 if (file_exists(basePath . "/inc/images/uploads/news/".$get_news['id'].".".$tmpendung)) {
                     $newsimage = '../inc/images/uploads/news/'.$get_news['id'].'.'.$tmpendung;

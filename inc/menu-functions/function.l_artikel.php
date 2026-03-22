@@ -22,21 +22,21 @@
  * @return string
  */
 function smarty_function_l_artikel($params,Smarty_Internal_Template &$smarty) {
-    $qry = common::$sql['default']->select("SELECT `id`,`titel`,`text`,`autor`,`datum`,`kat`,`public` "
-        . "FROM `{prefix_artikel}` "
-        . "WHERE `public` = 1 "
-        . "ORDER BY `id` DESC LIMIT ".settings::get('m_lartikel').";");
+    $qry = common::$sql['default']->select("SELECT a.`id`,a.`titel`,a.`text`,a.`autor`,a.`datum`,a.`kat`,a.`public`,k.`kategorie` "
+        . "FROM `{prefix_artikel}` AS a "
+        . "LEFT JOIN `{prefix_news_kats}` AS k ON a.`kat` = k.`id` "
+        . "WHERE a.`public` = 1 "
+        . "ORDER BY a.`id` DESC LIMIT ".settings::get('m_lartikel').";");
 
     $l_articles = '';
     if(common::$sql['default']->rowCount()) {
         foreach($qry as $get) {
-            $getkat = common::$sql['default']->fetch("SELECT `kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
             $text = strip_tags(stringParser::decode($get['text']));
             $info = '';
             if(!common::$mobile->isMobile() || common::$mobile->isTablet()) {
                 $info = 'onmouseover="DZCP.showInfo(\'' . common::jsconvert(stringParser::decode($get['titel'])) . '\', \'' . _datum . ';' .
                     _autor . ';' . _news_admin_kat . ';' . _comments_head . '\', \'' . date("d.m.Y H:i", $get['datum']) . _uhr . ';' .
-                    common::fabo_autor($get['autor']) . ';' . common::jsconvert(stringParser::decode($getkat['kategorie'])) . ';' .
+                    common::fabo_autor($get['autor']) . ';' . common::jsconvert(stringParser::decode($get['kategorie'])) . ';' .
                     common::cnt('{prefix_artikel_comments}', "WHERE `artikel` = ?", "id", [$get['id']]) . '\')" onmouseout="DZCP.hideInfo()"';
             }
 

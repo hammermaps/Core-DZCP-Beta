@@ -60,12 +60,10 @@ if(settings::get('news_feed')) { //NewsFeed
             ->ttl(60)
             ->appendTo($feed);
 
-        $qry = common::$sql['default']->select("SELECT `id`,`autor`,`datum`,`titel`,`text`,`kat` FROM `{prefix_news}` WHERE `intern` = 0 AND `public` = 1 ORDER BY `datum` DESC LIMIT 15;");
+        $qry = common::$sql['default']->select("SELECT n.`id`,n.`autor`,n.`datum`,n.`titel`,n.`text`,n.`kat`,k.`kategorie` FROM `{prefix_news}` AS n LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id` WHERE n.`intern` = 0 AND n.`public` = 1 ORDER BY n.`datum` DESC LIMIT 15;");
         if (common::$sql['default']->rowCount()) {
             foreach ($qry as $get) {
-                $kategorie = common::$sql['default']->fetch("SELECT `kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']],'kategorie');
-                if(!common::$sql['default']->rowCount())
-                    $kategorie = '';
+                $kategorie = $get['kategorie'] ?? '';
 
                 $item = new Item();
                 $item

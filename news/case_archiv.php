@@ -23,8 +23,9 @@ if(defined('_News')) {
     }
 
     //SQL
-    $qry = common::$sql['default']->select("SELECT `id`,`titel`,`autor`,`datum`,`kat`,`text`
-                   FROM `{prefix_news}`
+    $qry = common::$sql['default']->select("SELECT n.`id`,n.`titel`,n.`autor`,n.`datum`,n.`kat`,n.`text`,k.`kategorie`
+                   FROM `{prefix_news}` AS n
+                   LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id`
                    ".$intern."
                    ".common::orderby_sql(["datum","autor","titel","kat"], 'ORDER BY datum DESC')."
                    LIMIT ".(common::$page - 1)*settings::get('m_archivnews').",".settings::get('m_archivnews').";");
@@ -34,8 +35,6 @@ if(defined('_News')) {
     if(common::$sql['default']->rowCount()) {
         $show = ''; $color = 0;
         foreach ($qry as $get) {
-            $getk = common::$sql['default']->fetch("SELECT `kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
-
             //News Link
             $smarty->caching = false;
             $smarty->assign('link', common::cut(stringParser::decode($get['titel']), settings::get('l_newsarchiv')));
@@ -50,7 +49,7 @@ if(defined('_News')) {
             $smarty->assign('date', date("d.m.y", $get['datum']));
             $smarty->assign('titel', $titel);
             $smarty->assign('color',$color);
-            $smarty->assign('kat', stringParser::decode($getk['kategorie']));
+            $smarty->assign('kat', stringParser::decode($get['kategorie']));
             $smarty->assign('comments', common::cnt('{prefix_news_comments}', " WHERE `news` = ?","id",[$get['id']]));
             $show .= $smarty->fetch('file:[' . common::$tmpdir . ']' . $dir . '/archiv_show.tpl', common::getSmartyCacheHash('news_archiv_show_' . $get['id']));
             $smarty->clearAllAssign(); $color++;
@@ -75,5 +74,5 @@ if(defined('_News')) {
     $smarty->assign('show',$show);
     $index = $smarty->fetch('file:['.common::$tmpdir.']'.$dir.'/archiv.tpl');
     $smarty->clearAllAssign();
-    unset($nav,$show,$get,$qry,$class,$getk,$entrys,$intern);
+    unset($nav,$show,$get,$qry,$class,$entrys,$intern);
 }
