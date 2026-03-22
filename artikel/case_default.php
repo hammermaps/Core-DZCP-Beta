@@ -16,15 +16,15 @@
  */
 
 if(defined('_Artikel')) {
-    $qry = common::$sql['default']->select("SELECT `id`,`kat`,`titel`,`datum`,`autor` "
-            . "FROM `{prefix_artikel}` "
-            . "WHERE `public` = 1 ".common::orderby_sql(["artikel","titel","datum","kat"], 'ORDER BY `datum` DESC')." "
+    $qry = common::$sql['default']->select("SELECT a.`id`,a.`kat`,a.`titel`,a.`datum`,a.`autor`,k.`kategorie` "
+            . "FROM `{prefix_artikel}` AS a "
+            . "LEFT JOIN `{prefix_news_kats}` AS k ON a.`kat` = k.`id` "
+            . "WHERE a.`public` = 1 ".common::orderby_sql(["artikel","titel","datum","kat"], 'ORDER BY `datum` DESC')." "
             . "LIMIT ".(common::$page - 1)*settings::get('m_artikel').",".settings::get('m_artikel').";");
 
     if(common::$sql['default']->rowCount()) {
         $show = ''; $color = 0;
         foreach($qry as $get) {
-            $getk = common::$sql['default']->fetch("SELECT `kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
             $titel = '<a style="display:block" href="?action=show&amp;id='.$get['id'].'">'.stringParser::decode($get['titel']).'</a>';
 
             //-> Gen List
@@ -33,7 +33,7 @@ if(defined('_Artikel')) {
             $smarty->assign('date',date("d.m.y", $get['datum']));
             $smarty->assign('titel',$titel);
             $smarty->assign('color',$color);
-            $smarty->assign('kat',stringParser::decode($getk['kategorie']));
+            $smarty->assign('kat',stringParser::decode($get['kategorie']));
             $smarty->assign('comments',common::cnt('{prefix_artikel_comments}'," WHERE `artikel` = ?","id",[$get['id']]));
             $show .= $smarty->fetch('file:['.common::$tmpdir.']'.$dir.'/artikel_show.tpl',common::getSmartyCacheHash('artikel_show_'.$get['id']));
             $smarty->clearAllAssign(); $color++;
@@ -56,5 +56,5 @@ if(defined('_Artikel')) {
     $smarty->assign('order_kat',common::orderby('kat'));
     $index = $smarty->fetch('file:['.common::$tmpdir.']'.$dir.'/artikel.tpl');
     $smarty->clearAllAssign();
-    unset($seiten,$show,$qry,$get,$getk,$titel,$class);
+    unset($seiten,$show,$qry,$get,$titel,$class);
 }

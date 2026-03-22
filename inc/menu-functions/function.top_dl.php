@@ -16,18 +16,18 @@
  */
 
 function smarty_function_top_dl($params,Smarty_Internal_Template &$smarty) {
-    $qry = common::$sql['default']->select("SELECT `id`,`kat`,`download`,`date`,`hits` "
-        . "FROM `{prefix_downloads}`".(common::permission('dlintern') ? "" : " WHERE `intern` = 0")." "
-        . "ORDER BY `hits` ".(!settings::get('m_topdl') ? "DESC LIMIT ".settings::get('m_topdl').";" : ";"));
+    $qry = common::$sql['default']->select("SELECT d.`id`,d.`kat`,d.`download`,d.`date`,d.`hits`,k.`name` "
+        . "FROM `{prefix_downloads}` AS d LEFT JOIN `{prefix_download_kat}` AS k ON d.`kat` = k.`id`"
+        . (common::permission('dlintern') ? "" : " WHERE d.`intern` = 0")." "
+        . "ORDER BY d.`hits` ".(!settings::get('m_topdl') ? "DESC LIMIT ".settings::get('m_topdl').";" : ";"));
     $top_dl = '';
     if(common::$sql['default']->rowCount()) {
         foreach($qry as $get) {
-            $getkat = common::$sql['default']->fetch("SELECT `name` FROM `{prefix_download_kat}` WHERE `id` = ?;", [$get['kat']]);
 
             $info = '';
             if(!common::$mobile->isMobile() || common::$mobile->isTablet()) {
                 $info = 'onmouseover="DZCP.showInfo(\'' . common::jsconvert(stringParser::decode($get['download'])) . '\', \'' . _datum . ';' . _dl_dlkat . ';' . _hits . '\', \'' . date("d.m.Y H:i", $get['date']) . _uhr . ';' .
-                    common::jsconvert(stringParser::decode($getkat['name'])) . ';' . $get['hits'] . '\')" onmouseout="DZCP.hideInfo()"';
+                    common::jsconvert(stringParser::decode($get['name'])) . ';' . $get['hits'] . '\')" onmouseout="DZCP.hideInfo()"';
             }
 
             $smarty->caching = false;

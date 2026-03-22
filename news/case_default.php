@@ -28,9 +28,11 @@ if(defined('_News')) {
     }
 
     //Sticky News
-    $qry = common::$sql['default']->select("SELECT * FROM `{prefix_news}` WHERE `sticky` >= ? AND `datum` <= ? AND "
-            . "`public` = 1 ".(common::permission("intnews") ? "" : "AND `intern` = 0")." ".$n_kat." "
-            . "ORDER BY `datum` DESC LIMIT ".((common::$page - 1)*settings::get('m_news')).",".settings::get('m_news').";",
+    $qry = common::$sql['default']->select("SELECT n.*,k.`katimg`,k.`kategorie` FROM `{prefix_news}` AS n "
+            . "LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id` "
+            . "WHERE n.`sticky` >= ? AND n.`datum` <= ? AND "
+            . "n.`public` = 1 ".(common::permission("intnews") ? "" : "AND n.`intern` = 0")." ".$n_kat." "
+            . "ORDER BY n.`datum` DESC LIMIT ".((common::$page - 1)*settings::get('m_news')).",".settings::get('m_news').";",
             [($time=time()),$time]);
 
     $show_sticky = '';
@@ -43,8 +45,7 @@ if(defined('_News')) {
             $smarty->clearAllAssign();
 
             //Bild
-            $newsimage_get = common::$sql['default']->fetch("SELECT `katimg`,`kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
-            $newsimage = '../inc/images/uploads/newskat/'.stringParser::decode($newsimage_get['katimg']);
+            $newsimage = '../inc/images/uploads/newskat/'.stringParser::decode($get['katimg']);
             foreach(common::SUPPORTED_PICTURE as $tmpendung) {
                 if(file_exists(basePath."/inc/images/uploads/news/".$get['id'].".".$tmpendung)) {
                     $newsimage = '../inc/images/uploads/news/'.$get['id'].'.'.$tmpendung;
@@ -56,7 +57,7 @@ if(defined('_News')) {
             $smarty->caching = true;
             $smarty->assign('titel',stringParser::decode($get['titel']));
             $smarty->assign('kat',$newsimage);
-            $smarty->assign('kat_name',stringParser::decode($newsimage_get['kategorie']));
+            $smarty->assign('kat_name',stringParser::decode($get['kategorie']));
             $smarty->assign('id',$get['id']);
             $smarty->assign('is_mobile',common::$mobile->isMobile(),true);
             $smarty->assign('comments',common::cnt('{prefix_news_comments}', " WHERE `news` = ?","id",[(int)($get['id'])]));
@@ -78,9 +79,11 @@ if(defined('_News')) {
     }
 
     //News
-    $qry = common::$sql['default']->select("SELECT * FROM `{prefix_news}` WHERE `sticky` < ? AND `datum` <= ? "
-            . "AND `public` = 1 ".(common::permission("intnews") ? "" : "AND `intern` = 0")." ".$n_kat." "
-            . "ORDER BY `datum` DESC LIMIT ".(common::$page - 1)*settings::get('m_news').",".settings::get('m_news').";",
+    $qry = common::$sql['default']->select("SELECT n.*,k.`katimg`,k.`kategorie`,k.`color` FROM `{prefix_news}` AS n "
+            . "LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id` "
+            . "WHERE n.`sticky` < ? AND n.`datum` <= ? "
+            . "AND n.`public` = 1 ".(common::permission("intnews") ? "" : "AND n.`intern` = 0")." ".$n_kat." "
+            . "ORDER BY n.`datum` DESC LIMIT ".(common::$page - 1)*settings::get('m_news').",".settings::get('m_news').";",
             [($time=time()),$time]); $show = '';
     if(common::$sql['default']->rowCount()) {
         foreach($qry as $get) {
@@ -99,8 +102,7 @@ if(defined('_News')) {
             }
 
             //Bild
-            $newsimage_get = common::$sql['default']->fetch("SELECT `katimg`,`kategorie`,`color` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
-            $newsimage = '../inc/images/uploads/newskat/'.stringParser::decode($newsimage_get['katimg']);
+            $newsimage = '../inc/images/uploads/newskat/'.stringParser::decode($get['katimg']);
 
             //-> News Bild by ID
             foreach(common::SUPPORTED_PICTURE as $tmpendung) {
@@ -115,14 +117,14 @@ if(defined('_News')) {
             $smarty->caching = true;
             $smarty->assign('titel',stringParser::decode($get['titel']));
             $smarty->assign('kat',$newsimage);
-            $smarty->assign('kat_name',stringParser::decode($newsimage_get['kategorie']));
+            $smarty->assign('kat_name',stringParser::decode($get['kategorie']));
             $smarty->assign('id',$get['id']);
             $smarty->assign('is_mobile',common::$mobile->isMobile(),true);
             $smarty->assign('comments',common::cnt('{prefix_news_comments}', " WHERE `news` = ?","id",[(int)($get['id'])]));
             $smarty->assign('showmore','');
             $smarty->assign('dir',common::$designpath);
             $smarty->assign('intern',boolval($get['intern']));
-            $smarty->assign('color',stringParser::decode($newsimage_get['color']));
+            $smarty->assign('color',stringParser::decode($get['color']));
             $smarty->assign('sticky','');
             $smarty->assign('more',BBCode::parse_html((string)$get['more']));
             $smarty->assign('viewed',$viewed);

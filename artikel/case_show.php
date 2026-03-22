@@ -21,7 +21,7 @@ if(defined('_Artikel') && isset($_GET['id']) && !empty($_GET['id'])) {
         $index = common::error(_error_wrong_permissions, 1);
     } else {
         $add = false;
-        $get_artikel = common::$sql['default']->fetch("SELECT * FROM `{prefix_artikel}` WHERE `id` = ?".(common::permission("artikel") ? ";" : " AND public = 1;"), [$artikel_id]);
+        $get_artikel = common::$sql['default']->fetch("SELECT a.*, k.`katimg` FROM `{prefix_artikel}` AS a LEFT JOIN `{prefix_news_kats}` AS k ON a.`kat` = k.`id` WHERE a.`id` = ?".(common::permission("artikel") ? ";" : " AND a.`public` = 1;"), [$artikel_id]);
         if (!common::$sql['default']->rowCount()) {
             $index = common::error(_id_dont_exist, 1);
         } else {
@@ -294,7 +294,7 @@ if(defined('_Artikel') && isset($_GET['id']) && !empty($_GET['id'])) {
             $showmore = $smarty->fetch('file:['.common::$tmpdir.']'.$dir.'/comments.tpl');
             $smarty->clearAllAssign();
 
-            $artikelimage = '../inc/images/uploads/newskat/'.common::$sql['default']->fetch("SELECT `katimg` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get_artikel['kat']],'katimg');
+            $artikelimage = '../inc/images/uploads/newskat/'.$get_artikel['katimg'];
             foreach (common::SUPPORTED_PICTURE as $tmpendung) {
                 if (file_exists(basePath . "/inc/images/uploads/artikel/".$get_artikel['id'].".".$tmpendung)) {
                     $artikelimage = '../inc/images/uploads/artikel/'.$get_artikel['id'].'.'.$tmpendung;

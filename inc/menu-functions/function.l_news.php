@@ -22,20 +22,20 @@
  * @return string
  */
 function smarty_function_l_news($params,Smarty_Internal_Template &$smarty) {
-    $qry = common::$sql['default']->select("SELECT `id`,`titel`,`autor`,`datum`,`kat`,`public`,`timeshift` "
-        . "FROM `{prefix_news}` "
-        . "WHERE `public` = 1 AND `datum` <= ? ".(common::permission("intnews") ? "" : "AND `intern` = 0")." "
-        . "ORDER BY `id` DESC LIMIT ".settings::get('m_lnews').";", [time()]);
+    $qry = common::$sql['default']->select("SELECT n.`id`,n.`titel`,n.`autor`,n.`datum`,n.`kat`,n.`public`,n.`timeshift`,k.`kategorie` "
+        . "FROM `{prefix_news}` AS n "
+        . "LEFT JOIN `{prefix_news_kats}` AS k ON n.`kat` = k.`id` "
+        . "WHERE n.`public` = 1 AND n.`datum` <= ? ".(common::permission("intnews") ? "" : "AND n.`intern` = 0")." "
+        . "ORDER BY n.`id` DESC LIMIT ".settings::get('m_lnews').";", [time()]);
 
     $l_news = '';
     if(common::$sql['default']->rowCount()) {
         foreach($qry as $get) {
-            $getkat = common::$sql['default']->fetch("SELECT `kategorie` FROM `{prefix_news_kats}` WHERE `id` = ?;", [$get['kat']]);
             $info = '';
             if(!common::$mobile->isMobile() || common::$mobile->isTablet()) {
                 $info = 'onmouseover="DZCP.showInfo(\'' . common::jsconvert(stringParser::decode($get['titel'])) . '\', \'' .
                     _datum . ';' . _autor . ';' . _news_admin_kat . ';' . _comments_head . '\', \'' . date("d.m.Y H:i", $get['datum']) . _uhr . ';' .
-                    common::fabo_autor($get['autor']) . ';' . common::jsconvert(stringParser::decode($getkat['kategorie'])) . ';' .
+                    common::fabo_autor($get['autor']) . ';' . common::jsconvert(stringParser::decode($get['kategorie'])) . ';' .
                     common::cnt('{prefix_news_comments}', "WHERE `news` = ?", "id", [$get['id']]) . '\')" onmouseout="DZCP.hideInfo()"';
             }
 
