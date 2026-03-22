@@ -27,9 +27,11 @@ function smarty_function_rotationsbanner($params,Smarty_Internal_Template &$smar
     if(common::$sql['default']->rowCount()) {
         foreach($qry as $get) {
             $smarty->caching = false;
-            $smarty->assign('id',$get['id']);
-            $smarty->assign('title',htmlspecialchars(str_replace('http://', '', stringParser::decode($get['link']))));
-            $smarty->assign('banner',(empty($get['blink']) ? "../banner/sponsors/banner_".$get['id'].".".$get['bend'] : stringParser::decode($get['blink'])));
+            $smarty->assign([
+                'id'     => $get['id'],
+                'title'  => htmlspecialchars(str_replace('http://', '', stringParser::decode($get['link']))),
+                'banner' => (empty($get['blink']) ? "../banner/sponsors/banner_".$get['id'].".".$get['bend'] : stringParser::decode($get['blink'])),
+            ]);
             $rotationbanner .= $smarty->fetch('file:['.common::$tmpdir.']sponsors/sponsors_bannerlink.tpl');
         }
     }

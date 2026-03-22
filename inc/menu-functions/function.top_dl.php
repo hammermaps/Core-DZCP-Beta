@@ -31,10 +31,12 @@ function smarty_function_top_dl($params,Smarty_Internal_Template &$smarty) {
             }
 
             $smarty->caching = false;
-            $smarty->assign('id',$get['id']);
-            $smarty->assign('titel',common::cut(stringParser::decode($get['download']),settings::get('l_topdl')));
-            $smarty->assign('info',$info);
-            $smarty->assign('hits',$get['hits']);
+            $smarty->assign([
+                'id'    => $get['id'],
+                'titel' => common::cut(stringParser::decode($get['download']),settings::get('l_topdl')),
+                'info'  => $info,
+                'hits'  => $get['hits'],
+            ]);
             $top_dl .= $smarty->fetch('file:['.common::$tmpdir.']menu/top_dl/top_dl.tpl');
         }
     }

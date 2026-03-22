@@ -68,15 +68,17 @@ function smarty_function_counter($params,Smarty_Internal_Template &$smarty) {
                 $where = '';
             }
             $smarty->caching = false;
-            $smarty->assign('v_today',$v_today);
-            $smarty->assign('v_yesterday',$yDay);
-            $smarty->assign('v_all',$getstats['allvisitors']);
-            $smarty->assign('v_perday',round($getstats['avgvisitors'], 2));
-            $smarty->assign('v_max',$getstats['maxvisitors']);
-            $smarty->assign('g_online',common::online_guests($where));
-            $smarty->assign('u_online',common::online_guests($where));
-            $smarty->assign('v_online',$getstats['maxonline']);
-            $smarty->assign('info',$info);
+            $smarty->assign([
+                'v_today'     => $v_today,
+                'v_yesterday' => $yDay,
+                'v_all'       => $getstats['allvisitors'],
+                'v_perday'    => round($getstats['avgvisitors'], 2),
+                'v_max'       => $getstats['maxvisitors'],
+                'g_online'    => common::online_guests($where),
+                'u_online'    => common::online_guests($where),
+                'v_online'    => $getstats['maxonline'],
+                'info'        => $info,
+            ]);
             $counter = $smarty->fetch('file:['.common::$tmpdir.']menu/counter/counter.tpl');
         }
     }
