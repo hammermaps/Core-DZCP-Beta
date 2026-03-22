@@ -51,8 +51,9 @@ require_once(basePath . '/inc/notification.php');
 
 require_once(basePath.'/inc/settings.php');
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Jaybizzle\CrawlerDetect\CrawlerDetect;
-use Phine\Country\Loader\Loader;
 
 //Global Strings
 $index = ''; $show = ''; $color = 0;
@@ -272,9 +273,6 @@ class common {
         $options = ['compress' => true, 'sourceMap' => false];
         self::$less = new Less_Parser($options);
         unset($options);
-
-        //Country class
-        self::$country = new Loader();
 
         //Set User IP & einzelne Definitionen
         self::$userip = self::HasDSGVO() ? self::visitorIp() : ['v4' => self::IPV4_NULL_ADDR, 'v6' => self::IPV6_NULL_ADDR];
@@ -1073,11 +1071,64 @@ class common {
      * @return string
      */
     public static function show_countrys(string $selected_country="") {
-        $countries = self::$country->loadCountries(); $options = '';
-        foreach ($countries as $country) {
-            $selected = ($selected_country == strtolower($country->getAlpha2Code()) ? ' selected="selected"' :
-                (empty($selected_country) && strtolower($country->getAlpha2Code()) == 'de' ? ' selected="selected"' : ''));
-            $options .= '<option'.$selected.' value="'.strtolower($country->getAlpha2Code()).'">'.$country->getShortName().'</option>';
+        $countries = [
+            "af" => "Afghanistan", "ax" => "Åland Islands", "al" => "Albania", "dz" => "Algeria", "as" => "American Samoa",
+            "ad" => "Andorra", "ao" => "Angola", "ai" => "Anguilla", "aq" => "Antarctica", "ag" => "Antigua and Barbuda",
+            "ar" => "Argentina", "am" => "Armenia", "aw" => "Aruba", "au" => "Australia", "at" => "Austria",
+            "az" => "Azerbaijan", "bs" => "Bahamas", "bh" => "Bahrain", "bd" => "Bangladesh", "bb" => "Barbados",
+            "by" => "Belarus", "be" => "Belgium", "bz" => "Belize", "bj" => "Benin", "bm" => "Bermuda",
+            "bt" => "Bhutan", "bo" => "Bolivia", "bq" => "Bonaire, Sint Eustatius and Saba", "ba" => "Bosnia and Herzegovina", "bw" => "Botswana",
+            "bv" => "Bouvet Island", "br" => "Brazil", "io" => "British Indian Ocean Territory", "bn" => "Brunei Darussalam", "bg" => "Bulgaria",
+            "bf" => "Burkina Faso", "bi" => "Burundi", "kh" => "Cambodia", "cm" => "Cameroon", "ca" => "Canada",
+            "cv" => "Cape Verde", "ky" => "Cayman Islands", "cf" => "Central African Republic", "td" => "Chad", "cl" => "Chile",
+            "cn" => "China", "cx" => "Christmas Island", "cc" => "Cocos (Keeling) Islands", "co" => "Colombia", "km" => "Comoros",
+            "cg" => "Congo", "cd" => "Congo, The Democratic Republic of the", "ck" => "Cook Islands", "cr" => "Costa Rica", "ci" => "Côte d'Ivoire",
+            "hr" => "Croatia", "cu" => "Cuba", "cw" => "Curaçao", "cy" => "Cyprus", "cz" => "Czech Republic",
+            "dk" => "Denmark", "dj" => "Djibouti", "dm" => "Dominica", "do" => "Dominican Republic", "ec" => "Ecuador",
+            "eg" => "Egypt", "sv" => "El Salvador", "gq" => "Equatorial Guinea", "er" => "Eritrea", "ee" => "Estonia",
+            "et" => "Ethiopia", "fk" => "Falkland Islands (Malvinas)", "fo" => "Faroe Islands", "fj" => "Fiji", "fi" => "Finland",
+            "fr" => "France", "gf" => "French Guiana", "pf" => "French Polynesia", "tf" => "French Southern Territories", "ga" => "Gabon",
+            "gm" => "Gambia", "ge" => "Georgia", "de" => "Germany", "gh" => "Ghana", "gi" => "Gibraltar",
+            "gr" => "Greece", "gl" => "Greenland", "gd" => "Grenada", "gp" => "Guadeloupe", "gu" => "Guam",
+            "gt" => "Guatemala", "gg" => "Guernsey", "gn" => "Guinea", "gw" => "Guinea-Bissau", "gy" => "Guyana",
+            "ht" => "Haiti", "hm" => "Heard Island and McDonald Islands", "va" => "Holy See (Vatican City State)", "hn" => "Honduras", "hk" => "Hong Kong",
+            "hu" => "Hungary", "is" => "Iceland", "in" => "India", "id" => "Indonesia", "ir" => "Iran, Islamic Republic of",
+            "iq" => "Iraq", "ie" => "Ireland", "im" => "Isle of Man", "il" => "Israel", "it" => "Italy",
+            "jm" => "Jamaica", "jp" => "Japan", "je" => "Jersey", "jo" => "Jordan", "kz" => "Kazakhstan",
+            "ke" => "Kenya", "ki" => "Kiribati", "kp" => "Korea, Democratic People's Republic of", "kr" => "Korea, Republic of", "kw" => "Kuwait",
+            "kg" => "Kyrgyzstan", "la" => "Lao People's Democratic Republic", "lv" => "Latvia", "lb" => "Lebanon", "ls" => "Lesotho",
+            "lr" => "Liberia", "ly" => "Libya", "li" => "Liechtenstein", "lt" => "Lithuania", "lu" => "Luxembourg",
+            "mo" => "Macao", "mk" => "Macedonia, The Former Yugoslav Republic of", "mg" => "Madagascar", "mw" => "Malawi", "my" => "Malaysia",
+            "mv" => "Maldives", "ml" => "Mali", "mt" => "Malta", "mh" => "Marshall Islands", "mq" => "Martinique",
+            "mr" => "Mauritania", "mu" => "Mauritius", "yt" => "Mayotte", "mx" => "Mexico", "fm" => "Micronesia, Federated States of",
+            "md" => "Moldova, Republic of", "mc" => "Monaco", "mn" => "Mongolia", "me" => "Montenegro", "ms" => "Montserrat",
+            "ma" => "Morocco", "mz" => "Mozambique", "mm" => "Myanmar", "na" => "Namibia", "nr" => "Nauru",
+            "np" => "Nepal", "nl" => "Netherlands", "nc" => "New Caledonia", "nz" => "New Zealand", "ni" => "Nicaragua",
+            "ne" => "Niger", "ng" => "Nigeria", "nu" => "Niue", "nf" => "Norfolk Island", "mp" => "Northern Mariana Islands",
+            "no" => "Norway", "om" => "Oman", "pk" => "Pakistan", "pw" => "Palau", "ps" => "Palestine, State of",
+            "pa" => "Panama", "pg" => "Papua New Guinea", "py" => "Paraguay", "pe" => "Peru", "ph" => "Philippines",
+            "pn" => "Pitcairn", "pl" => "Poland", "pt" => "Portugal", "pr" => "Puerto Rico", "qa" => "Qatar",
+            "re" => "Réunion", "ro" => "Romania", "ru" => "Russian Federation", "rw" => "Rwanda", "bl" => "Saint Barthélemy",
+            "sh" => "Saint Helena, Ascension and Tristan da Cunha", "kn" => "Saint Kitts and Nevis", "lc" => "Saint Lucia", "mf" => "Saint Martin (French part)", "pm" => "Saint Pierre and Miquelon",
+            "vc" => "Saint Vincent and the Grenadines", "ws" => "Samoa", "sm" => "San Marino", "st" => "Sao Tome and Principe", "sa" => "Saudi Arabia",
+            "sn" => "Senegal", "rs" => "Serbia", "sc" => "Seychelles", "sl" => "Sierra Leone", "sg" => "Singapore",
+            "sx" => "Sint Maarten (Dutch part)", "sk" => "Slovakia", "si" => "Slovenia", "sb" => "Solomon Islands", "so" => "Somalia",
+            "za" => "South Africa", "gs" => "South Georgia and the South Sandwich Islands", "ss" => "South Sudan", "es" => "Spain", "lk" => "Sri Lanka",
+            "sd" => "Sudan", "sr" => "Suriname", "sj" => "Svalbard and Jan Mayen", "sz" => "Swaziland", "se" => "Sweden",
+            "ch" => "Switzerland", "sy" => "Syrian Arab Republic", "tw" => "Taiwan, Province of China", "tj" => "Tajikistan", "tz" => "Tanzania, United Republic of",
+            "th" => "Thailand", "tl" => "Timor-Leste", "tg" => "Togo", "tk" => "Tokelau", "to" => "Tonga",
+            "tt" => "Trinidad and Tobago", "tn" => "Tunisia", "tr" => "Turkey", "tm" => "Turkmenistan", "tc" => "Turks and Caicos Islands",
+            "tv" => "Tuvalu", "ug" => "Uganda", "ua" => "Ukraine", "ae" => "United Arab Emirates", "gb" => "United Kingdom",
+            "us" => "United States", "um" => "United States Minor Outlying Islands", "uy" => "Uruguay", "uz" => "Uzbekistan", "vu" => "Vanuatu",
+            "ve" => "Venezuela, Bolivarian Republic of", "vn" => "Viet Nam", "vg" => "Virgin Islands, British", "vi" => "Virgin Islands, U.S.", "wf" => "Wallis and Futuna",
+            "eh" => "Western Sahara", "ye" => "Yemen", "zm" => "Zambia", "zw" => "Zimbabwe"
+        ];
+
+        $options = '';
+        foreach ($countries as $code => $name) {
+            $selected = ($selected_country == $code ? ' selected="selected"' :
+                (empty($selected_country) && $code == 'de' ? ' selected="selected"' : ''));
+            $options .= '<option'.$selected.' value="'.$code.'">'.$name.'</option>';
         }
 
         return '<select id="land" name="land" class="dropdown">'.$options.'</select>';
@@ -2249,94 +2300,64 @@ class common {
      * @param int $timeout (optional)
      * @return String|Boolean
      */
-    public static function get_external_contents(string $url,$post=false,$header=false,bool $nogzip=false,int $timeout=0) {
-        if((!(ini_get('allow_url_fopen') == 1) && !config::$use_curl || (config::$use_curl && !extension_loaded('curl'))))
-            return false;
-
-        if(!$timeout)
+    public static function get_external_contents(string $url, $post = false, $header = false, bool $nogzip = false, int $timeout = 0) {
+        if (!$timeout) {
             $timeout = config::$file_get_contents_timeout;
+        }
 
         $url_p = @parse_url($url);
         $host = $url_p['host'];
         $port = isset($url_p['port']) ? $url_p['port'] : 80;
         $port = (($url_p['scheme'] == 'https' && $port == 80) ? 443 : $port);
-        if(!self::ping_port($host,$port,$timeout))
+        if (!self::ping_port($host, $port, $timeout)) {
             return false;
+        }
 
         unset($host);
 
-        if(config::$use_curl && extension_loaded('curl')) { //Use CURL
-            if(!$curl = curl_init())
-                return false;
+        $options = [
+            'timeout' => $timeout,
+            'connect_timeout' => $timeout,
+            'headers' => [
+                'User-Agent' => 'DZCP',
+                'Pragma' => 'no-cache',
+            ],
+            'allow_redirects' => [
+                'max'             => 10,
+                'strict'          => false,
+                'referer'         => true,
+                'protocols'       => ['http', 'https'],
+                'track_redirects' => false
+            ],
+            'verify' => false, // SSL Verification disabled as in original code
+            'decode_content' => !$nogzip,
+            'cookies' => true,
+        ];
 
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_AUTOREFERER, true);
-            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-            curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-            curl_setopt($curl, CURLOPT_USERAGENT, "DZCP");
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT , $timeout);
-            curl_setopt($curl, CURLOPT_TIMEOUT, $timeout * 2); // x 2
-            curl_setopt($curl, CURLOPT_COOKIEFILE, basePath.'/inc/_cache_/netapi.cookie');
-            curl_setopt($curl, CURLOPT_COOKIEJAR, basePath.'/inc/_cache_/netapi.cookie');
-
-            //For POST
-            if(count($post) >= 1 && $post != false) {
-                curl_setopt($curl, CURLOPT_POST, 1);
-                curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
-                curl_setopt($curl, CURLOPT_VERBOSE , 0 );
-            }
-
-            $gzip = false;
-            if(function_exists('gzinflate') && !$nogzip) {
-                $gzip = true;
-                curl_setopt($curl, CURLOPT_HTTPHEADER, ['Accept-Encoding: gzip,deflate']);
-                curl_setopt($curl, CURLINFO_HEADER_OUT, true);
-            }
-
-            if($url_p['scheme'] == 'https') { //SSL
-                curl_setopt($curl, CURLOPT_PORT , $port);
-                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-            }
-
-            $content = curl_exec($curl);
-            if (empty($content) || (is_bool($content) && !$content)) {
-                return false;
-            }
-
-            if($gzip) {
-                $curl_info = curl_getinfo($curl,CURLINFO_HEADER_OUT);
-                if(stristr($curl_info, 'accept-encoding') && stristr($curl_info, 'gzip')) {
-                    $content = gzinflate( substr($content,10,-8) );
+        if ($header && is_array($header)) {
+            foreach ($header as $h) {
+                if (strpos($h, ':') !== false) {
+                    list($key, $value) = explode(':', $h, 2);
+                    $options['headers'][trim($key)] = trim($value);
                 }
             }
-
-            @curl_close($curl);
-            unset($curl);
-        } else { //Use Snoopy
-            $snoopy = new Snoopy\Snoopy;
-            $snoopy->rawheaders["Pragma"] = "no-cache";
-            $snoopy->use_gzip = !$nogzip;
-            $snoopy->rawheaders = !$header ? [] : $header;
-            $snoopy->agent = "DZCP";
-            if(count($post) >= 1 && $post != false) {
-                if (!$snoopy->submit($url,$post)) {
-                    return false;
-                }
-            } else {
-                if (!$snoopy->fetch($url)) {
-                    return false;
-                }
-            }
-
-            $content =  $snoopy->results;
-            unset($snoopy);
         }
 
-        return ((string)(trim($content)));
+        try {
+            $client = new Client($options);
+            if (is_array($post) && count($post) >= 1) {
+                $response = $client->request('POST', $url, [
+                    'form_params' => $post
+                ]);
+            } else {
+                $response = $client->request('GET', $url);
+            }
+
+            $content = (string)$response->getBody();
+            return trim($content);
+        } catch (GuzzleException $e) {
+            return false;
+        }
     }
 
     /**
