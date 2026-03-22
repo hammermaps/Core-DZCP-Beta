@@ -92,7 +92,7 @@ final class session {
         if(show_sessions_debug)
             DebugConsole::insert_info("session::mem_open()", "Connect to Memcache Server");
 
-        if($this->memcached instanceOf Memcache) return false;
+        if($this->memcached instanceOf Memcache) return true;
         $this->memcached = new Memcache();
         $this->memcached->addServer(sessions_memcache_host,sessions_memcache_port);
 
@@ -197,7 +197,7 @@ final class session {
             }
         }
 
-        if (!$this->_lockTimeout) {
+        if ($this->_lockTimeout) {
             $locks = apc_fetch($this->_prefix.'/LOCK');
             if (!empty($locks[$id])) {
                 while (!empty($locks[$id]) && $locks[$id] + $this->_lockTimeout >= time()) {
@@ -306,7 +306,7 @@ final class session {
             }
         }
 
-        return ($this->db instanceOf database === false);
+        return ($this->db instanceOf database);
     }
 
     public final function sql_close() {
@@ -320,7 +320,7 @@ final class session {
         }
 
         if ($this->db instanceOf database) {
-            $data = $this->db->selectSingle("SELECT `data` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id],'data');
+            $data = $this->db->fetch("SELECT `data` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id],'data');
             if(!$this->db->rowCount()) { return ''; }
             if (empty($data)) { return ''; }
             if(sessions_encode) {
@@ -353,8 +353,7 @@ final class session {
 
         if ($this->db instanceOf database) {
             $time = time();
-            $this->db->select("SELECT `id` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id]);
-            if(!$this->db->rowCount()) {
+            if(!$this->db->rows("SELECT `id` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id])) {
                 return $this->db->insert("INSERT INTO `{prefix_sessions}` (id, ssid, time, data) VALUES (NULL, ?, ?, ?);", [$id, $time, $data]);
             } else {
                 return $this->db->update("UPDATE `{prefix_sessions}` SET `time` = ?, `data` = ? WHERE `ssid` = ?;", [$time, $data, $id]);
@@ -369,8 +368,7 @@ final class session {
             DebugConsole::insert_info("session::sql_destroy()", "Call Session destroy");
         }
 
-        $this->db->select("SELECT `id` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id]);
-        if($this->db->rowCount()) {
+        if($this->db->rows("SELECT `id` FROM `{prefix_sessions}` WHERE `ssid` = ? LIMIT 1;", [$id])) {
             return $this->db->delete("DELETE FROM `{prefix_sessions}` WHERE `ssid` = ?;", [$id]);
         }
 
@@ -383,9 +381,8 @@ final class session {
         }
 
         $new_time = time() - $max;
-        $this->db->select("SELECT `id` FROM `{prefix_sessions}` WHERE `time` < ".$new_time.";");
-        if($this->db->rowCount()) {
-            return $this->db->delete("DELETE FROM `{prefix_sessions}` WHERE `time` < ".$new_time.";");
+        if($this->db->rows("SELECT `id` FROM `{prefix_sessions}` WHERE `time` < ?;", [$new_time])) {
+            return $this->db->delete("DELETE FROM `{prefix_sessions}` WHERE `time` < ?;", [$new_time]);
         }
 
         return false;
@@ -395,20 +392,20 @@ final class session {
         $crypt = new Crypt(Crypt::MODE_B64,$mcryptkey);
         if (empty($mcryptkey)) { $crypt->__set('Key', self::$securityKey_mcrypt); } 
         else { $crypt->__set('Key', $mcryptkey); }
-        if($binary && !$hex) { $crypt->__set('Hash',CRYPT_MODE_BINARY); }
-        if(!$binary && $hex) { $crypt->__set('Hash',CRYPT_MODE_HEXADECIMAL); }
+        if($binary && !$hex) { $crypt->__set('Mode', Crypt::MODE_B64); }
+        if(!$binary && $hex) { $crypt->__set('Mode', Crypt::MODE_HEX); }
         $is_array = is_array($data);
         $data = serialize(['data' => $data, 'array' => $is_array]);
-        return $crypt->Encrypt($data);
+        return $crypt->encrypt($data);
     }
 
     public static function decode($data,$mcryptkey='',$binary=false,$hex=false) {
         $crypt = new Crypt(Crypt::MODE_B64,$mcryptkey);
         if (empty($mcryptkey)) { $crypt->__set('Key', self::$securityKey_mcrypt); } 
         else { $crypt->__set('Key', $mcryptkey); }
-        if($binary && !$hex) { $crypt->__set('Hash',CRYPT_MODE_BINARY); }
-        if(!$binary && $hex) { $crypt->__set('Hash',CRYPT_MODE_HEXADECIMAL); }
-        $data = unserialize($crypt->Decrypt($data));
+        if($binary && !$hex) { $crypt->__set('Mode', Crypt::MODE_B64); }
+        if(!$binary && $hex) { $crypt->__set('Mode', Crypt::MODE_HEX); }
+        $data = unserialize($crypt->decrypt($data));
         if (!is_array($data)) {
             return null;
         }

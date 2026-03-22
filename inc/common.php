@@ -530,7 +530,7 @@ class common {
                 } else {
                     $data = json_decode(common::$cache->AutoMemGet($cache_hash),true);
                     if(!empty($data['permissions']) && (string)$data['permissions'] != 'null') {
-                        if(common::permission((string)$data['permissions']) || ((int)$data['level'] >= 1 && (int)$data['level'])) {
+                        if(common::permission((string)$data['permissions']) || ((int)$data['level'] >= 1 && common::$chkMe >= (int)$data['level'])) {
                             if($templ == $_GET['tmpl_set']) {
                                 $_SESSION['tmpdir'] = $templ;
                                 if(self::HasDSGVO()) {
@@ -926,18 +926,19 @@ class common {
 
         if($ip6) {
             $dns = dns_get_record($address, DNS_AAAA);
+            $ip6_results = [];
             foreach ($dns as $record) {
                 if ($record["type"] == "AAAA") {
-                    $ip6[] = $record["ipv6"];
+                    $ip6_results[] = $record["ipv6"];
                 }
             }
 
-            if (count($ip6) < 1) {
+            if (count($ip6_results) < 1) {
                 if (!($result = gethostbyname($address))) {
                     return false;
                 }
             } else {
-                $result = $ip6[0];
+                $result = $ip6_results[0];
             }
         } else {
             if (!($result = gethostbyname($address))) {
@@ -2093,7 +2094,7 @@ class common {
      */
     public static function check_ip() {
         if(!self::isIP(self::$userip['v4'], true)) {
-            if((!self::isIP(self::$userip['v4']) && !self::isIP(self::$userip,true)) || self::$userip == false || empty(self::$userip)) {
+            if((!self::isIP(self::$userip['v4']) && !self::isIP(self::$userip['v6'],true)) || self::$userip == false || empty(self::$userip)) {
                 self::dzcp_session_destroy();
                 die('Deine IP ist ung&uuml;ltig!<p>Your IP is invalid!');
             }
