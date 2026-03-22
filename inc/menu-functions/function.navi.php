@@ -74,19 +74,23 @@ function smarty_function_navi($params,Smarty_Internal_Template &$smarty) {
                     $target = ($get['target']) ? '_blank' : '_self';
                     if(file_exists(common::$designpath.'/menu/navi/'.$get['kat'].'.tpl')) {
                         $smarty->caching = false;
-                        $smarty->assign('target',$target);
-                        $smarty->assign('href',preg_replace('"( |^)(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)"i', 'http://\2', stringParser::decode($get['url'])));
-                        $smarty->assign('title',strip_tags($name));
-                        $smarty->assign('css',ucfirst(str_replace('nav_', '', stringParser::decode($get['kat']))));
-                        $smarty->assign('link',$name);
+                        $smarty->assign([
+                            'target' => $target,
+                            'href'   => preg_replace('"( |^)(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)"i', 'http://\2', stringParser::decode($get['url'])),
+                            'title'  => strip_tags($name),
+                            'css'    => ucfirst(str_replace('nav_', '', stringParser::decode($get['kat']))),
+                            'link'   => $name,
+                        ]);
                         $link = $smarty->fetch('file:['.common::$tmpdir.']menu/navi/'.stringParser::decode($get['kat']).'.tpl');
                     } else {
                         $smarty->caching = false;
-                        $smarty->assign('target',$target);
-                        $smarty->assign('href',preg_replace('"( |^)(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)"i', 'http://\2', stringParser::decode($get['url'])));
-                        $smarty->assign('title',strip_tags($name));
-                        $smarty->assign('css',ucfirst(str_replace('nav_', '', stringParser::decode($get['kat']))));
-                        $smarty->assign('link',$name);
+                        $smarty->assign([
+                            'target' => $target,
+                            'href'   => preg_replace('"( |^)(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)"i', 'http://\2', stringParser::decode($get['url'])),
+                            'title'  => strip_tags($name),
+                            'css'    => ucfirst(str_replace('nav_', '', stringParser::decode($get['kat']))),
+                            'link'   => $name,
+                        ]);
                         $link = $smarty->fetch('file:['.common::$tmpdir.']menu/navi/nav_link.tpl');
                     }
 

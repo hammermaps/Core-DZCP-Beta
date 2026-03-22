@@ -36,12 +36,14 @@ function smarty_function_ftopics($params,Smarty_Internal_Template &$smarty) {
                 }
 
                 $smarty->caching = false;
-                $smarty->assign('id',$get['id']);
-                $smarty->assign('pagenr',$page);
-                $smarty->assign('p',$lp);
-                $smarty->assign('titel',common::cut(stringParser::decode($get['topic']),settings::get('l_ftopics')));
-                $smarty->assign('info',$info);
-                $smarty->assign('kid',$get['kid']);
+                $smarty->assign([
+                    'id'     => $get['id'],
+                    'pagenr' => $page,
+                    'p'      => $lp,
+                    'titel'  => common::cut(stringParser::decode($get['topic']),settings::get('l_ftopics')),
+                    'info'   => $info,
+                    'kid'    => $get['kid'],
+                ]);
                 $ftopics .= $smarty->fetch('file:['.common::$tmpdir.']menu/forum/forum_topics.tpl');
                 $f++;
             }

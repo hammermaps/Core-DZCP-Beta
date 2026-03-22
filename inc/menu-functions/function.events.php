@@ -31,14 +31,18 @@ function smarty_function_events($params,Smarty_Internal_Template &$smarty) {
             }
 
             $smarty->caching = false;
-            $smarty->assign('datum',date("d.m.",$get['datum']));
-            $smarty->assign('timestamp',$get['datum']);
-            $smarty->assign('event',stringParser::decode($get['title']));
+            $smarty->assign([
+                'datum'     => date("d.m.",$get['datum']),
+                'timestamp' => $get['datum'],
+                'event'     => stringParser::decode($get['title']),
+            ]);
             $events = $smarty->fetch('file:['.common::$tmpdir.']menu/event/next_event_link.tpl');
 
             $smarty->caching = false;
-            $smarty->assign('events',$events);
-            $smarty->assign('info',$info);
+            $smarty->assign([
+                'events' => $events,
+                'info'   => $info,
+            ]);
             $eventbox .= $smarty->fetch('file:['.common::$tmpdir.']menu/event/event.tpl');
         }
     }

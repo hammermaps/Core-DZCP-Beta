@@ -40,10 +40,12 @@ function smarty_function_l_news($params,Smarty_Internal_Template &$smarty) {
             }
 
             $smarty->caching = false;
-            $smarty->assign('id',$get['id']);
-            $smarty->assign('titel',common::cut(stringParser::decode($get['titel']),settings::get('l_lnews')));
-            $smarty->assign('datum',date("d.m.Y", $get['datum']));
-            $smarty->assign('info',$info);
+            $smarty->assign([
+                'id'    => $get['id'],
+                'titel' => common::cut(stringParser::decode($get['titel']),settings::get('l_lnews')),
+                'datum' => date("d.m.Y", $get['datum']),
+                'info'  => $info,
+            ]);
             $l_news .= $smarty->fetch('file:['.common::$tmpdir.']menu/l_news/last_news.tpl');
         }
     }

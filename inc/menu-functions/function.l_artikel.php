@@ -41,11 +41,13 @@ function smarty_function_l_artikel($params,Smarty_Internal_Template &$smarty) {
             }
 
             $smarty->caching = false;
-            $smarty->assign('id',$get['id']);
-            $smarty->assign('titel',common::cut(stringParser::decode($get['titel']),settings::get('l_lartikel')));
-            $smarty->assign('text',common::cut(BBCode::parse_html($text),260));
-            $smarty->assign('datum',date("d.m.Y", $get['datum']));
-            $smarty->assign('info',$info);
+            $smarty->assign([
+                'id'    => $get['id'],
+                'titel' => common::cut(stringParser::decode($get['titel']),settings::get('l_lartikel')),
+                'text'  => common::cut(BBCode::parse_html($text),260),
+                'datum' => date("d.m.Y", $get['datum']),
+                'info'  => $info,
+            ]);
             $l_articles .= $smarty->fetch('file:['.common::$tmpdir.']menu/l_artikel/last_artikel.tpl');
         }
     }
