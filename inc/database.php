@@ -102,7 +102,7 @@ final class database {
     
     public function rows($qry, array $params = []) {
         if (($type = $this->getQueryType($qry)) !== "select" && 
-                ($type = $this->getQueryType($qry)) !== "show") {
+                $type !== "show") {
             DebugConsole::sql_error_Exception("Incorrect Select Query",$qry,$params);
             DebugConsole::insert_error('database::rows','Incorrect Select Query!');
             DebugConsole::insert_sql_info('database::rows',$qry,$params);
@@ -325,7 +325,7 @@ final class database {
         $qry = $this->rep_prefix($qry); // replace sql prefix
 
         //Debug
-        if(show_pdo_delete_debug || show_pdo_delete_debug || show_pdo_delete_debug || show_pdo_delete_debug) {
+        if(show_pdo_delete_debug || show_pdo_update_debug || show_pdo_insert_debug || show_pdo_select_debug) {
             DebugConsole::insert_sql_info('database::run_query('.$type.')',$qry,$params);
         }
 
